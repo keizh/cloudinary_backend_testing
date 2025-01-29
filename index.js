@@ -4,16 +4,16 @@ const multer = require(`multer`);
 const app = express();
 
 cloudinary.config({
-  cloud_name: "dddkhewor",
-  api_key: "596457694329466",
-  api_secret: "lGKAaV8hiMRjx7_tLi1DAIUJhPM",
+  cloud_name: process.env.cloud_name,
+  api_key: process.env.api_key,
+  api_secret: process.env.api_secret,
 });
 
 const upload = multer({
   storage: multer.diskStorage({}),
   //   limiting size of each file , not array of files
   limits: {
-    fileSize: 5 * 1024 * 1024,
+    fileSize: 4.4 * 1024 * 1024,
   },
 });
 
@@ -36,9 +36,7 @@ app.post("/media/single", upload.single("image"), async (req, res) => {
     const data = await cloudinary.uploader.upload(req.file.path);
     console.log(data);
   } else {
-    const data = await cloudinary.uploader.upload(req.file.path, {
-      resource_type: "auto",
-    });
+    const data = await cloudinary.uploader.upload(req.file.path);
     console.log(data);
   }
 
@@ -46,6 +44,9 @@ app.post("/media/single", upload.single("image"), async (req, res) => {
 });
 
 app.listen(5500, () => console.log(`webserver is online`));
+
+// video , image files can be shared externally meaning , url can be used to display
+// pdy can be shared externally
 
 /*
 image data file
