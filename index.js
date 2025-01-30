@@ -2,6 +2,7 @@ const express = require(`express`);
 const cloudinary = require("cloudinary").v2;
 const multer = require(`multer`);
 const app = express();
+require("dotenv").config();
 
 cloudinary.config({
   cloud_name: process.env.cloud_name,
@@ -20,33 +21,41 @@ const upload = multer({
 app.post("/media/multiple", upload.array("image", 10), (req, res) => {
   //   console.log(`req.body`, req.body);
   //   console.log(`req.files`, req.files);
-  res.status(200).json({ message: "sent" });
 });
 
 app.post("/media/single", upload.single("image"), async (req, res) => {
   //   console.log(`req.body`, req.body.image);
   //   console.log(`req.file`, req.file);
-  //   console.log(`req.file.path`req.file.path);
+  //   console.log(`req.file.path`, req.file.path);
   //   req.file.path serves as the URL for the image or the file
 
-  //   uploading single file ( image , video ,  pdf , doc)  using cloudinary
   console.log(req.file);
-
-  if (req.file.mimetype.includes("image")) {
-    const data = await cloudinary.uploader.upload(req.file.path);
+  try {
+    // importance of resource_type : "auto"( must use )
+    // irrespective of which file type you are sending , auto will detect itself and set the resource_type
+    const data = await cloudinary.uploader.upload(req.file.path, {
+      resource_type: "auto",
+    });
     console.log(data);
-  } else {
-    const data = await cloudinary.uploader.upload(req.file.path);
-    console.log(data);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ message: err.message });
   }
-
   res.status(200).json({ message: `great` });
 });
 
 app.listen(5500, () => console.log(`webserver is online`));
 
-// video , image files can be shared externally meaning , url can be used to display
-// pdy can be shared externally
+//  use secure_url
+// use public_id for deletion
+
+// cloudinary.uploader.destroy(public_id); <-- images
+
+// cloudinary.uploader.destroy(public_id, {
+//     resource_type: "video" <-- Required for audio/video
+//   });
+
+//  resource_type: "raw" <-- for pdf/doc
 
 /*
 image data file
