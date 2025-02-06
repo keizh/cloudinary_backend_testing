@@ -209,3 +209,29 @@ response of video uploaded
 }
 
 */
+
+/*
+
+
+The discrepancy between sequential uploads (working) and parallel uploads (failing) is likely due to race conditions in Cloudinary's authentication parameters,
+specifically the timestamp and signature generation.
+Here's the root cause and solution:
+Problem: Shared Timestamp Across Parallel Uploads
+When using Promise.allSettled, all files are uploaded simultaneously. 
+If you generate a single timestamp/signature outside the loop (or reuse the same one for all files), Cloudinary rejects concurrent requests with the same cryptographic signature, as it expects a unique timestamp-signature pair per request.
+Solution: Generate Unique Timestamp/Signature for Each File
+Modify your code to generate a new timestamp and signature for each individual file upload inside the map function:
+
+Why Sequential Uploads Worked
+In sequential uploads (using for loop), each iteration generates a new timestamp implicitly (due to the delay between iterations). 
+This avoids signature collisions, but it’s not reliable for production.
+
+Using a for…of loop with await inside guarantees that each asynchronous operation completes before the next one starts. 
+This behavior makes the iterations truly sequential. 
+In contrast:
+.map: When you use .map with an async function, it immediately returns an array of promises without waiting for each promise to settle.
+If you then pass that array to Promise.all or Promise.allSettled, all the async operations run concurrently rather than in order.
+.forEach: Similarly, .forEach executes its callback on every element without waiting for any promises to resolve, and it doesn’t return a promise that you can await. This means you can’t easily enforce a sequential order with .forEach.
+In summary, while all three methods iterate over an array synchronously, a for…of loop combined with await processes each asynchronous call one after the other, ensuring sequential execution. In contrast, .map and .forEach (without additional control flow) do not wait for each asynchronous operation to complete, resulting in concurrent execution which can lead to issues if your code relies on sequential behavior.
+
+*/
